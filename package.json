@@ -1,0 +1,21 @@
+{
+	"name": "ppa-carsearch",
+	"version": "0.1.0",
+	"description": "does nothing",
+	"main": "app.ahk",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Chunjee/Wop_PPS2HTML"
+	},
+	"dependencies": {
+		"array.ahk": "^0.1.8",
+		"biga.ahk": "^0.42.0",
+		"json.ahk": "chunjee/json.ahk",
+		"neutron.ahk": "chunjee/neutron.ahk",
+		"winhttprequest.ahk": "gist:8cf6aaa7512332ae63e4de7accbccf2c",
+		"wrappers.ahk": "chunjee/wrappers.ahk"
+	},
+	"devDependencies": {},
+	"author": "Shawn Brooker",
+	"license": "MIT"
+}
