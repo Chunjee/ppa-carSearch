@@ -29,6 +29,7 @@ neutron.Show()
 ; read and parse needed stuff from cars object
 FileRead, Carsjson, cars.txt
 global carsObj := JSON.parse(Carsjson).allMakerModels.makers
+; Array_Gui(carsObj)
 allManufacturers := A.map(carsObj, A.property("name"))
 ;  => ["Lexus", "Acura", "Polestar", "Opel", "Hillman", "MINI", "Muntz", "Nissan", "smart", "Subaru", "Bentley", "Austin", "Panoz", "BMW", "Hyundai", "Triumph", "Peugeot", "Genesis", "Lincoln", "Tesla", "AM General", "Mitsubishi", "Messerschmitt", "Hudson", "Buick", "Plymouth", "Suzuki", "Ariel", "SRT", "Pininfarina", "Bricklin", "Lotus", "Honda", "Bugatti", "De Tomaso", "Pontiac", "Pagani", "Moskvitch", "Volkswagen", "Cadillac", "Datsun", "Isuzu", "Maserati", "Austin-Healey", "Studebaker", "Toyota", "Daewoo", "Porsche", "VPG", "Volvo", "Chrysler", "DeLorean", "Jaguar", "Maybach", "Sunbeam", "Excalibur", "Rolls-Royce", "Eagle", "Dodge", "Graham", "Willys", "Jeep", "Rover", "FIAT", "Kaiser", "Mobility Ventures", "Mazda", "AMC", "Lancia", "Nash", "Geo", "Saab", "McLaren", "Edsel", "Ferrari", "Cord", "Kia", "Freightliner", "Alfa Romeo", "Karma", "Jensen", "Mercedes-Benz", "DeSoto", "Saturn", "Franklin", "GMC", "Citroen", "INFINITI", "Fisker", "Morgan", "Chevrolet", "Lamborghini", "RAM", "International Harvester", "Riley", "Autobianchi", "Shelby", "MG", "Packard", "Audi", "Mercury", "Aston Martin", "Hummer", "Oldsmobile", "Scion", "Morris", "Land Rover", "Ford"]
 
@@ -64,45 +65,48 @@ fn_submit(neutron, event)
 	; out .= "Email: " formData.inputEmail "`n"
 
 	; Find the MAKE ID for the user's input
-	; msgbox, % A.print(carsObj)
 	brandCode := A.find(carsObj, {"name": formData.inputMake}).id
 	; neutron.doc.getElementById("ahk_output").innerText := Convert(out)
-
+	; Find the MODEL ID for the user's input
+	modelCode := fn_findModelID(formData.inputModel, formData.inputMake)
+	msgbox, % modelCode " found when searching " formData.inputMake " " formData.inputModel
 
 	; create http request
 	req := {}
 	req.inventorySearchWidgetType := "AUTO"
-	req.bodyTypeGroupIds := 0 ;coupe
+	; req.bodyTypeGroupIds := 0 ;coupe
 	; req.searchId := "20f6ffe9-3e16-403e-a752-89794f0c5d43"
 	req.deliveryFilterType := "SOME"
 	req.nonShippableBaseline := "35"
 	req.sortDir := "ASC"
 	req.sourceContext := "untrackedExternal_false_0"
 	req.distance := "500"
-	req.sortType := "MILEAGE"
+	; req.sortType := "MILEAGE"
 	req.zip := formData.inputZip
 	req.startYear := formData.inputStartYear
 	req.endYear := formData.inputEndYear
 	req["entitySelectingHelper.selectedEntity"] := brandCode
-	req["entitySelectingHelper.selectedEntity2"] := formData.inputModel
+	; req["entitySelectingHelper.selectedEntity2"] := modelCode
 
 	endpoint := "https://www.cargurus.com/Cars/preflightResults.action?"
 	body := A.join(A.mapValues(req, Func("fn_mapValuesFunc")), "&")
-
+	; msgbox, % endpoint body
 	; send request
-	HTTP.Open("GET", endpoint body) ;GET & POST are most frequent, Make sure you UPPERCASE
-	HTTP.Send() ;If POST request put data in "Payload" variable
+	HTTP.Open("GET", endpoint body)
+	HTTP.Send()
 	Response_Text := HTTP.ResponseText
 	res := JSON.parse(Response_Text)
 
 	; parse request
 	; put all cars in one big array
-	vehicles := A.uniq(A.concat(res.listings, res.featuredListings, res.conquestListings, res.priorityListings, res.highlightListings))
-	; msgbox, % A.print(vehicles[1].modelName)
+	vehicles := A.compact(A.concat(res.listings, res.featuredListings, res.conquestListings, res.priorityListings, res.highlightListings))
+	modelsFound := A.join(A.map(vehicles, A.property("modelName")))
 	; vehicles := A.filter(vehicles, {"modelName": formData.inputModel})
-	vehicles := A.compact(vehicles)
-	; modelsFound := A.join(A.map(vehicles, A.property("modelName")))
-	; msgbox, % modelsFound
+	vehicles := A.uniq(vehicles)
+	vehicles := A.sortBy(vehicles, "price")
+
+	; try finding the model's id
+
 	; Array_Gui(vehicles)
 	; pick just the data we like
 	; pickedVehicles := A.map(vehicles, Func("fn_pickFields"))
@@ -113,6 +117,21 @@ fn_submit(neutron, event)
 }
 
 
+fn_findModelID(param_model, param_make:="")
+{
+	global carsObj
+	; loop all makes
+	for key, value in carsObj {
+		if (param_make = value.name || param_make == "") {
+			; loop all models
+			for key2, value2 in value.models {
+				if (value2.name = param_model) {
+					return value2.id
+				}
+			}
+		}
+	}
+}
 
 fn_pickFields(o)
 {
