@@ -1,15 +1,15 @@
 {
 	"name": "ppa-carsearch",
 	"version": "0.1.0",
-	"description": "does nothing",
+	"description": "searches for car data",
 	"main": "app.ahk",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/Chunjee/Wop_PPS2HTML"
+		"url": "https://github.com/Chunjee/ppa-carsearch"
 	},
 	"dependencies": {
 		"array.ahk": "^0.1.8",
-		"biga.ahk": "^0.42.0",
+		"biga.ahk": "^0.49.0",
 		"json.ahk": "chunjee/json.ahk",
 		"neutron.ahk": "chunjee/neutron.ahk",
 		"winhttprequest.ahk": "gist:8cf6aaa7512332ae63e4de7accbccf2c",
